@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { type ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import { auth } from 'express-oauth2-jwt-bearer';
@@ -17,6 +18,10 @@ import { activityAPI } from './activities/activityAPI.js';
 import { JoinRequestService } from './joinRequests/JoinRequestService.js';
 import { joinRequestAPI } from './joinRequests/joinRequestAPI.js';
 import { RecommendationService } from './recommendations/RecommendationService.js';
+import { ConsoleEmailService } from './notifications/EmailService.js';
+import { NotificationService } from './notifications/NotificationService.js';
+import { ResendEmailService } from './notifications/ResendEmailService.js';
+import { schoolAPI } from './schools/schoolAPI.js';
 
 const app = express();
 
@@ -24,10 +29,15 @@ const service = new ProfileService(new SqliteUserRepository(db), new SqliteSchoo
 const users = new SqliteUserRepository(db);
 const activities = new SqliteActivityRepository(db);
 const activityService = new ActivityService(activities, users);
+const emailService = process.env.RESEND_API_KEY && process.env.EMAIL_FROM
+  ? new ResendEmailService(process.env.EMAIL_FROM)
+  : new ConsoleEmailService();
+const notifications = new NotificationService(emailService);
 const joinRequestService = new JoinRequestService(
   new SqliteJoinRequestRepository(db),
   activities,
   users,
+  notifications,
 );
 const recommendations = new RecommendationService(activities, users);
 
@@ -101,6 +111,7 @@ app.put('/api/profile', requireConfiguredAuth, async (req, res, next) => {
 
 app.use('/api/activities', activityAPI(activityService, requireConfiguredAuth));
 app.use('/api/join-requests', joinRequestAPI(joinRequestService, requireConfiguredAuth));
+app.use('/api/schools', schoolAPI(new SqliteSchoolRepository(db)));
 
 app.get('/api/recommendations', requireConfiguredAuth, async (req, res, next) => {
   try {

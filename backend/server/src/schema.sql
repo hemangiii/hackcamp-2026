@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS activities (
   name          TEXT NOT NULL,
   description   TEXT NOT NULL DEFAULT '',
   type          TEXT NOT NULL
-    CHECK (type IN ('academic','party','networking','sports','other')),
+    CHECK (type IN ('study','food','sports','career','other')),
   location      TEXT NOT NULL,
   start_time    TEXT NOT NULL,
   end_time      TEXT NOT NULL,
