@@ -1,4 +1,4 @@
-import type { ActivityType, Profile, SchoolYear } from './types.js';
+import type { ActivityType, Profile, SchoolYear } from '../types.js';
 
 export class User {
   private constructor(
