@@ -128,6 +128,7 @@ app.get('/api/recommendations', requireConfiguredAuth, async (req, res, next) =>
 
 
 const errors: ErrorRequestHandler = (error, _req, res, _next) => {
+    console.error('BACKEND ERROR:', error);
   if (error instanceof z.ZodError) {
     res.status(400).json({ error: 'Invalid request', details: error.issues });
     return;
