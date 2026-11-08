@@ -14,7 +14,11 @@ export class ProfileService {
   async save(auth: AuthUser, input: Profile): Promise<User> {
     let school;
     try { school = this.schools.mustFind(input.schoolId); } catch { throw new AppError('School not found', 400); }
-    SchoolEmail.of(auth.email ?? '', school.emailDomain);
+    try {
+      SchoolEmail.of(auth.email ?? '', school.emailDomain);
+    } catch (error) {
+      throw new AppError(error instanceof Error ? error.message : 'School email does not match selected school', 400);
+    }
     const user = User.create(auth.id, input, auth.email!);
     await this.users.save(user);
     return user;
