@@ -12,3 +12,8 @@ export interface Profile {
   hobbies: string[];
   interestedTypes: ActivityType[]; //activity types
 }
+
+export interface ActivityInput {
+  name: string; description: string; type: ActivityType; location: string;
+  startTime: string; endTime: string; link?: string | null;
+}

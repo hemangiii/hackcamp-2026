@@ -10,9 +10,21 @@ import { SqliteSchoolRepository } from './repositories/SqliteSchoolRepository.js
 import { SqliteUserRepository } from './repositories/SqliteUserRepository.js';
 import { SCHOOL_YEARS, ACTIVITY_TYPES } from './types.js';
 import { AppError } from './domain/errors.js';
+import { SqliteActivityRepository } from './repositories/SqliteActivityRepository.js';
+import { SqliteJoinRequestRepository } from './repositories/SqliteJoinRequestRepository.js';
+import { ActivityService } from './activities/ActivityService.js';
+import { activityAPI } from './activities/activityAPI.js';
+import { JoinRequestService } from './joinRequests/JoinRequestService.js';
+import { joinRequestAPI } from './joinRequests/joinRequestAPI.js';
+import { RecommendationService } from './recommendations/RecommendationService.js';
 
 const app = express();
 const service = new ProfileService(new SqliteUserRepository(db), new SqliteSchoolRepository(db));
+const users = new SqliteUserRepository(db);
+const activities = new SqliteActivityRepository(db);
+const activityService = new ActivityService(activities, users);
+const joinRequestService = new JoinRequestService(new SqliteJoinRequestRepository(db), activities, users);
+const recommendations = new RecommendationService(activities, users);
 const profileSchema = z.object({ schoolId: z.number().int().positive(), name: z.string().trim().min(1).max(100), schoolYear: z.enum(SCHOOL_YEARS), major: z.string().max(100).nullable().optional(), hobbies: z.array(z.string().trim().min(1).max(50)).max(20), interestedTypes: z.array(z.enum(ACTIVITY_TYPES)).max(ACTIVITY_TYPES.length) });
 
 app.use(cors({ origin: process.env.FRONTEND_ORIGIN?.split(',') ?? true }));
@@ -31,6 +43,9 @@ const serialize = (user: Awaited<ReturnType<ProfileService['get']>>) => user && 
 
 app.get('/api/profile', requireConfiguredAuth, async (_req, res, next) => { try { res.json({ data: serialize(await service.get(res.locals.user as AuthUser)) }); } catch (e) { next(e); } });
 app.put('/api/profile', requireConfiguredAuth, async (req, res, next) => { try { const input = profileSchema.parse(req.body); res.json({ data: serialize(await service.save(res.locals.user as AuthUser, input)) }); } catch (e) { next(e); } });
+app.use('/api/activities', activityAPI(activityService, requireConfiguredAuth));
+app.use('/api/join-requests', joinRequestAPI(joinRequestService, requireConfiguredAuth));
+app.get('/api/recommendations', requireConfiguredAuth, async (req, res, next) => { try { res.json({data: await recommendations.forUser(res.locals.user as AuthUser)}); } catch (e) { next(e); } });
 
 const errors: ErrorRequestHandler = (error, _req, res, _next) => { if (error instanceof z.ZodError) { res.status(400).json({ error: 'Invalid request', details: error.issues }); return; } if (error instanceof AppError) { res.status(error.status).json({ error: error.message }); return; } res.status(500).json({ error: 'Unexpected server error' }); };
 app.use(errors);
