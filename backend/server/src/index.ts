@@ -128,15 +128,23 @@ app.get('/api/recommendations', requireConfiguredAuth, async (req, res, next) =>
 
 
 const errors: ErrorRequestHandler = (error, _req, res, _next) => {
-    console.error('BACKEND ERROR:', error);
+  console.error('BACKEND ERROR:', error);
+
+  if (error?.status === 401 || error?.statusCode === 401) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
   if (error instanceof z.ZodError) {
     res.status(400).json({ error: 'Invalid request', details: error.issues });
     return;
   }
+
   if (error instanceof AppError) {
     res.status(error.status).json({ error: error.message });
     return;
   }
+
   res.status(500).json({ error: 'Unexpected server error' });
 };
 
