@@ -1,3 +1,10 @@
+/** Matches the schools table seeded in backend/server/src/schema.sql */
+export const SCHOOL_OPTIONS = [
+  { id: 1, short: 'UBC', name: 'University of British Columbia', domain: 'student.ubc.ca', color: 'mint' },
+  { id: 2, short: 'SFU', name: 'Simon Fraser University', domain: 'sfu.ca', color: 'pink' },
+  { id: 3, short: 'UVic', name: 'University of Victoria', domain: 'uvic.ca', color: 'yellow' },
+] as const;
+
 export const SCHOOLS: Record<number, string> = {
   1: 'UBC Vancouver Campus',
   2: 'SFU Burnaby Campus',

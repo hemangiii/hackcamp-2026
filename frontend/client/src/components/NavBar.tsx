@@ -12,7 +12,7 @@ export function NavBar({ current, onNavigate }: { current: Page; onNavigate: (pa
   return (
     <header className="nav">
       <button className="nav-brand" onClick={() => onNavigate('discover')}>
-        <Logo /> on campus
+        <Logo size={30} /> on campus
       </button>
       <nav aria-label="Main">
         {LINKS.map(({ page, label }) => (

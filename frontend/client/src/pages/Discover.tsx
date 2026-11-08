@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type Activity, type ActivityType } from '../api';
 import { ActivityCard } from '../components/ActivityCard';
+import { Stickman } from '../components/Stickman';
 import { SCHOOLS, formatHeaderDate } from '../format';
 
 type Filter = 'for-you' | 'all' | ActivityType;
@@ -43,7 +44,7 @@ export function Discover({ schoolId }: { schoolId: number | null }) {
     <section className="page">
       <div className="discover-head">
         <div>
-          <h1 className="date-heading">{formatHeaderDate()}</h1>
+          <h1 className="page-title">{formatHeaderDate()}</h1>
           {schoolId && <p className="mono-label">{SCHOOLS[schoolId]}</p>}
         </div>
         <div className="filters" role="group" aria-label="Filter activities">
@@ -67,7 +68,10 @@ export function Discover({ schoolId }: { schoolId: number | null }) {
         </p>
       )}
       {state.status === 'ready' && state.activities.length === 0 && (
-        <p className="status">Nothing here yet. Be the first to create an activity.</p>
+        <div className="empty">
+          <Stickman pose="point" />
+          <p>Nothing here yet. Be the first to create an activity.</p>
+        </div>
       )}
       {state.status === 'ready' && state.activities.length > 0 && (
         <div className="card-grid">

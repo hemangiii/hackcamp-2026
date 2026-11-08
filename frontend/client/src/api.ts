@@ -35,6 +35,9 @@ export type JoinRequest = {
   createdAt: string;
 };
 
+/** Mirrors ActivityInput in backend/server/src/types.ts */
+export type ActivityInput = Omit<Activity, 'id' | 'creatorId' | 'schoolId'>;
+
 export type ActivityFilters = { type?: ActivityType; location?: string; startTime?: string; endTime?: string };
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
@@ -66,6 +69,8 @@ const liveApi = {
   saveProfile: (profile: Profile) => request<Profile>('/api/profile', { method: 'PUT', body: JSON.stringify(profile) }),
   listActivities: (filters: ActivityFilters = {}) => request<Activity[]>(`/api/activities${query(filters)}`),
   getRecommendations: () => request<Activity[]>('/api/recommendations'),
+  createActivity: (input: ActivityInput) =>
+    request<Activity>('/api/activities', { method: 'POST', body: JSON.stringify(input) }),
   requestToJoin: (activityId: string) =>
     request<JoinRequest>(`/api/join-requests/${encodeURIComponent(activityId)}/join`, { method: 'POST' }),
 };

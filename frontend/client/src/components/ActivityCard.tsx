@@ -3,6 +3,7 @@ import { api, type Activity } from '../api';
 import { formatWhen } from '../format';
 
 const COLORS = ['pink', 'mint', 'orange'] as const;
+const BACKS = { pink: 'mint', mint: 'yellow', orange: 'pink' } as const;
 
 type JoinState = { kind: 'idle' } | { kind: 'sending' } | { kind: 'requested' } | { kind: 'error'; message: string };
 
@@ -23,27 +24,31 @@ export function ActivityCard({ activity, index }: { activity: Activity; index: n
   const label = { idle: 'Join', sending: 'Sending…', requested: 'Requested', error: 'Try again' }[join.kind];
 
   return (
-    <article className={`card card-${color}`}>
-      <h3 className="card-title">
-        <span className="card-num">{String(index + 1).padStart(2, '0')}.</span> {activity.name}
-      </h3>
-      <div className="card-meta">
-        <p>{formatWhen(activity.startTime, activity.endTime)}</p>
-        <p>{activity.location}</p>
-      </div>
-      {join.kind === 'error' && (
-        <p className="card-error" role="alert">
-          {join.message}
-        </p>
-      )}
-      <button
-        className="card-join"
-        onClick={requestToJoin}
-        disabled={join.kind === 'sending' || join.kind === 'requested'}
-        aria-label={`${label}: ${activity.name}`}
-      >
-        {label}
-      </button>
-    </article>
+    <div className="card-wrap">
+      <div className={`card-back bg-${BACKS[color]}`} aria-hidden="true" />
+      <article className={`card card-${color}`}>
+        <h3 className="card-title">
+          <span className="card-num">{String(index + 1).padStart(2, '0')}</span>
+          {activity.name}
+        </h3>
+        <div className="card-meta">
+          <p>{formatWhen(activity.startTime, activity.endTime)}</p>
+          <p>{activity.location}</p>
+        </div>
+        {join.kind === 'error' && (
+          <p className="card-error" role="alert">
+            {join.message}
+          </p>
+        )}
+        <button
+          className="card-join"
+          onClick={requestToJoin}
+          disabled={join.kind === 'sending' || join.kind === 'requested'}
+          aria-label={`${label}: ${activity.name}`}
+        >
+          {label}
+        </button>
+      </article>
+    </div>
   );
 }

@@ -35,6 +35,11 @@ export const sampleApi: Api = {
         .sort((a, b) => Number(profile?.interestedTypes.includes(b.type)) - Number(profile?.interestedTypes.includes(a.type)))
         .slice(0, 3),
     ),
+  createActivity: (input) => {
+    const created: Activity = { ...input, id: crypto.randomUUID(), creatorId: 'me', schoolId: profile?.schoolId ?? 1 };
+    activities.push(created);
+    return delay(created);
+  },
   requestToJoin: (activityId) =>
     delay<JoinRequest>({ id: crypto.randomUUID(), activityId, userId: 'me', status: 'pending', createdAt: new Date().toISOString() }),
 };
