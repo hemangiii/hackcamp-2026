@@ -1,14 +1,23 @@
 import { Logo } from './Logo';
 
-export type Page = 'discover' | 'create' | 'profile';
+export type Page = 'discover' | 'create' | 'mine' | 'profile';
 
 const LINKS: { page: Page; label: string }[] = [
   { page: 'discover', label: 'Discover' },
   { page: 'create', label: 'Create activity' },
+  { page: 'mine', label: 'My activities' },
   { page: 'profile', label: 'Profile' },
 ];
 
-export function NavBar({ current, onNavigate }: { current: Page; onNavigate: (page: Page) => void }) {
+export function NavBar({
+  current,
+  onNavigate,
+  onLogOut,
+}: {
+  current: Page;
+  onNavigate: (page: Page) => void;
+  onLogOut: () => void;
+}) {
   return (
     <header className="nav">
       <button className="nav-brand" onClick={() => onNavigate('discover')}>
@@ -25,6 +34,9 @@ export function NavBar({ current, onNavigate }: { current: Page; onNavigate: (pa
             {label}
           </button>
         ))}
+        <button className="link nav-logout" onClick={onLogOut}>
+          Log out
+        </button>
       </nav>
     </header>
   );

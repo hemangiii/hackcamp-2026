@@ -1,28 +1,26 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { Auth0Provider } from '@auth0/auth0-react'
-import './index.css'
-import App from './App.tsx'
-import { AuthGate } from './auth/AuthGate.tsx'
-
-const domain = import.meta.env.VITE_AUTH0_DOMAIN;
-const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
-const app = <AuthGate><App /></AuthGate>;
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { Auth0Provider } from '@auth0/auth0-react';
+import './index.css';
+import App from './App.tsx';
+import { auth0Config, usingSampleData } from './api';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {domain && clientId && audience ? (
+    {usingSampleData ? (
+      <App />
+    ) : (
       <Auth0Provider
-        domain={domain}
-        clientId={clientId}
-        authorizationParams={{
-          redirect_uri: window.location.origin,
-          audience,
-        }}
+        domain={auth0Config.domain!}
+        clientId={auth0Config.clientId!}
+        authorizationParams={{ redirect_uri: window.location.origin, audience: auth0Config.audience }}
+        // Keeps students signed in across page reloads. Needs "Refresh Token
+        // Rotation" turned on for this application in the Auth0 dashboard.
+        useRefreshTokens
+        cacheLocation="localstorage"
       >
-        {app}
+        <App />
       </Auth0Provider>
-    ) : <App />}
+    )}
   </StrictMode>,
-)
+);

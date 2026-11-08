@@ -1,20 +1,48 @@
 import { useEffect, useState } from 'react';
-import { api, usingSampleData, type Profile as ProfileData } from './api';
+import { useAuth0 } from '@auth0/auth0-react';
+import { api, setTokenGetter, usingSampleData, type Profile as ProfileData } from './api';
 import { NavBar, type Page } from './components/NavBar';
+import { SCHOOL_OPTIONS } from './format';
 import { CreateActivity } from './pages/CreateActivity';
 import { Discover } from './pages/Discover';
 import { LogIn } from './pages/LogIn';
+import { MyActivities } from './pages/MyActivities';
 import { Profile } from './pages/Profile';
 import { SignUp } from './pages/SignUp';
+import { VerifyEmail } from './pages/VerifyEmail';
 import { Welcome } from './pages/Welcome';
 import './App.css';
 
 const emptyProfile: ProfileData = { schoolId: 1, name: '', schoolYear: 'first', major: null, hobbies: [], interestedTypes: [] };
 
-type Screen = 'welcome' | 'signup' | 'login' | 'app';
+const schoolForEmail = (email?: string) =>
+  SCHOOL_OPTIONS.find((s) => email?.toLowerCase().endsWith(`@${s.domain}`))?.id ?? 1;
 
-export default function App() {
-  const [screen, setScreen] = useState<Screen>('welcome');
+type PublicScreen = 'welcome' | 'signup' | 'login';
+
+const scrollTop = () => window.scrollTo(0, 0);
+
+/** Welcome, Sign up and Log in: what you see before you're signed in. */
+function PublicScreens({
+  onSignUp,
+  onLogIn,
+}: {
+  onSignUp: (schoolId: number, email: string) => void;
+  onLogIn: (email: string) => void;
+}) {
+  const [screen, setScreen] = useState<PublicScreen>('welcome');
+  const go = (next: PublicScreen) => {
+    setScreen(next);
+    scrollTop();
+  };
+
+  if (screen === 'signup') return <SignUp onBack={() => go('welcome')} onLogIn={() => go('login')} onContinue={onSignUp} />;
+  if (screen === 'login') return <LogIn onBack={() => go('welcome')} onSignUp={() => go('signup')} onContinue={onLogIn} />;
+  return <Welcome onSignUp={() => go('signup')} onLogIn={() => go('login')} />;
+}
+
+/** The signed-in app: nav plus the four pages. */
+function MainApp({ userId, defaultSchoolId, onLogOut }: { userId: string; defaultSchoolId: number; onLogOut: () => void }) {
   const [page, setPage] = useState<Page>('discover');
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
@@ -22,58 +50,110 @@ export default function App() {
   useEffect(() => {
     api
       .getProfile()
-      .then(setProfile)
+      .then((p) => {
+        setProfile(p);
+        // First visit after sign-up: step 2 is filling in the profile.
+        if (!p) setPage('profile');
+      })
       .catch(() => setProfile(null))
       .finally(() => setProfileLoaded(true));
   }, []);
 
-  const go = (next: Screen) => {
-    setScreen(next);
-    window.scrollTo(0, 0);
+  const navigate = (next: Page) => {
+    setPage(next);
+    scrollTop();
   };
-
-  if (screen === 'welcome') return <Welcome onSignUp={() => go('signup')} onLogIn={() => go('login')} />;
-
-  if (screen === 'signup')
-    return (
-      <SignUp
-        onBack={() => go('welcome')}
-        onLogIn={() => go('login')}
-        onContinue={(schoolId) => {
-          // Step 2 of sign-up is the profile form, pre-filled with the chosen school.
-          setProfile((p) => ({ ...(p ?? emptyProfile), schoolId }));
-          setPage('profile');
-          go('app');
-        }}
-      />
-    );
-
-  if (screen === 'login')
-    return (
-      <LogIn
-        onBack={() => go('welcome')}
-        onSignUp={() => go('signup')}
-        onContinue={() => {
-          setPage('discover');
-          go('app');
-        }}
-      />
-    );
 
   return (
     <div className="shell">
       {usingSampleData && <p className="sample-banner">Sample data: nothing is saved to the server.</p>}
-      <NavBar current={page} onNavigate={setPage} />
+      <NavBar current={page} onNavigate={navigate} onLogOut={onLogOut} />
       <main>
         {page === 'discover' && <Discover schoolId={profile?.schoolId ?? null} />}
-        {page === 'create' && <CreateActivity onViewDiscover={() => setPage('discover')} />}
+        {page === 'create' && <CreateActivity onViewDiscover={() => navigate('discover')} />}
+        {page === 'mine' && <MyActivities userId={userId} onDiscover={() => navigate('discover')} />}
         {page === 'profile' &&
           (profileLoaded ? (
-            <Profile key={profile?.schoolId} initial={profile ?? emptyProfile} onSaved={setProfile} />
+            <Profile
+              key={profile ? 'saved' : 'new'}
+              initial={profile ?? { ...emptyProfile, schoolId: defaultSchoolId }}
+              onSaved={setProfile}
+            />
           ) : (
-            <p className="status">Loading profile…</p>
+            <p className="status page">Loading profile…</p>
           ))}
       </main>
     </div>
   );
+}
+
+/** No Auth0 configured: click straight through with fake data. */
+function SampleApp() {
+  const [signedIn, setSignedIn] = useState<{ schoolId: number } | null>(null);
+  if (!signedIn)
+    return (
+      <PublicScreens
+        onSignUp={(schoolId) => setSignedIn({ schoolId })}
+        onLogIn={(email) => setSignedIn({ schoolId: schoolForEmail(email) })}
+      />
+    );
+  return <MainApp userId="me" defaultSchoolId={signedIn.schoolId} onLogOut={() => setSignedIn(null)} />;
+}
+
+/**
+ * Real sign-in through Auth0. Auth0 hosts the sign-up/login pages and sends
+ * the verify-your-email message; the backend rejects tokens whose email
+ * isn't verified, so unverified students wait on the VerifyEmail screen.
+ */
+function LiveApp() {
+  const { isLoading, isAuthenticated, user, error, loginWithRedirect, logout, getAccessTokenSilently } = useAuth0();
+
+  useEffect(() => {
+    setTokenGetter(isAuthenticated ? () => getAccessTokenSilently() : null);
+  }, [isAuthenticated, getAccessTokenSilently]);
+
+  const logOut = () => logout({ logoutParams: { returnTo: window.location.origin } });
+
+  if (isLoading) return <p className="status page">Loading…</p>;
+
+  if (error) {
+    return (
+      <div className="page">
+        <p className="status status-error" role="alert">
+          Sign-in problem: {error.message}
+        </p>
+        <button className="cta" onClick={logOut}>
+          Back to start
+        </button>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user)
+    return (
+      <PublicScreens
+        onSignUp={(_schoolId, email) =>
+          loginWithRedirect({ authorizationParams: { screen_hint: 'signup', login_hint: email } })
+        }
+        onLogIn={(email) => loginWithRedirect({ authorizationParams: { login_hint: email } })}
+      />
+    );
+
+  if (!user.email_verified)
+    return (
+      <VerifyEmail
+        email={user.email ?? 'your school email'}
+        onCheckAgain={async () => {
+          // Fetch fresh tokens so Auth0 re-reads email_verified.
+          await getAccessTokenSilently({ cacheMode: 'off' });
+        }}
+        onLogOut={logOut}
+      />
+    );
+
+  return <MainApp userId={user.sub ?? ''} defaultSchoolId={schoolForEmail(user.email)} onLogOut={logOut} />;
+}
+
+export default function App() {
+  return usingSampleData ? <SampleApp /> : <LiveApp />;
 }

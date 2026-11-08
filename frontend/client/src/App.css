@@ -647,6 +647,88 @@
   }
 }
 
+/* ---------- my activities + verify ---------- */
+.section-title {
+  margin: clamp(32px, 4vw, 48px) 0 16px;
+  font-size: clamp(26px, 2.4vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.mine-list {
+  display: grid;
+  gap: 16px;
+}
+.mine-item {
+  display: grid;
+  gap: 14px;
+}
+.mine-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.mine-title {
+  font-size: clamp(20px, 1.8vw, 26px);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.mine-empty {
+  color: var(--ink-soft);
+}
+.mine-error {
+  margin-top: 16px;
+}
+.request-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.request-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--cream);
+}
+.request-who {
+  font-weight: 600;
+}
+.request-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tag-count,
+.status-pill {
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tag-count { background: var(--mint); }
+.status-pending { background: var(--yellow); }
+.status-accepted { background: var(--olive); color: var(--cream); }
+.status-rejected { background: var(--line); }
+.verify-actions {
+  margin-top: 24px;
+}
+.nav-logout {
+  margin-left: 6px;
+  font-size: 15px;
+}
+.check-email {
+  font-size: 19px;
+  max-width: 34ch;
+}
+
 /* ---------- welcome ---------- */
 /* Hero sits dead-centre; the activity notes frame it from the edges so the
    logo and sign-up stay the focus. */

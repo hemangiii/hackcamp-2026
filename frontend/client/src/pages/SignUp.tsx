@@ -11,15 +11,16 @@ const NOTES = [
  * Step 1 of sign-up: pick your school and enter your school email.
  * We never ask for a password here. Auth0 handles login and email
  * verification, and the backend only accepts verified school emails.
- * Until Auth0 is wired into the frontend, Continue goes straight to
- * profile setup with the chosen school.
+ * Continue hands over to Auth0's sign-up page (prefilled with this email),
+ * which sends the verify-your-email message. In sample mode it goes straight
+ * to profile setup.
  */
 export function SignUp({
   onContinue,
   onLogIn,
   onBack,
 }: {
-  onContinue: (schoolId: number) => void;
+  onContinue: (schoolId: number, email: string) => void;
   onLogIn: () => void;
   onBack: () => void;
 }) {
@@ -40,7 +41,7 @@ export function SignUp({
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setTouched(true);
-    if (!error && school) onContinue(school.id);
+    if (!error && school) onContinue(school.id, email.trim().toLowerCase());
   };
 
   return (
@@ -55,7 +56,7 @@ export function SignUp({
       pose="highfive"
       onBack={onBack}
     >
-      <p className="mono-label">Step 1 of 2</p>
+      <p className="mono-label">Step 1 of 3</p>
       <h1 className="auth-title">Sign up</h1>
       <form className="form" onSubmit={submit} noValidate>
         <fieldset>
