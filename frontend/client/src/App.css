@@ -241,120 +241,215 @@
 }
 
 /* ---------- welcome ---------- */
+/* Hero sits dead-centre; the activity notes frame it from the edges so the
+   logo and sign-up stay the focus. */
 .welcome {
+  position: relative;
   min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 32px 16px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 72px 16px 48px;
   text-align: center;
-  overflow: hidden;
+  padding: clamp(28px, 4vw, 48px) clamp(24px, 5vw, 64px);
+  border-radius: 28px;
+  background: radial-gradient(closest-side, var(--cream) 70%, transparent);
+}
+.hero-logo {
+  color: var(--ink);
+  animation: spin-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .welcome-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: clamp(40px, 7vw, 60px);
+  margin-top: 12px;
+  font-size: clamp(64px, 9vw, 170px);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
 }
 .welcome-tagline {
   color: var(--ink-soft);
-  margin: 12px 0 28px;
-  max-width: 34ch;
+  font-size: clamp(19px, 1.8vw, 32px);
+  margin: 20px 0 36px;
+  max-width: 30ch;
+  text-wrap: balance;
+}
+.welcome-tagline strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--ink);
+  color: var(--cream);
+  border: 0;
+  border-radius: 999px;
+  padding: 20px 40px;
+  font-size: clamp(18px, 1.5vw, 26px);
+  font-weight: 600;
+  box-shadow: 0 6px 0 var(--orange);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 var(--orange);
+}
+.cta:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--orange);
+}
+.cta-arrow {
+  transition: transform 150ms ease;
+}
+.cta:hover .cta-arrow {
+  transform: translateX(4px);
+}
+.cta-hint {
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: clamp(13px, 1vw, 17px);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
 }
 .welcome-login {
-  margin-top: 12px;
-  font-size: 14px;
+  margin-top: 20px;
+  font-size: clamp(16px, 1.2vw, 21px);
 }
+
 .notes {
-  position: relative;
-  width: min(640px, 100%);
-  height: 300px;
-  margin-top: 56px;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
 }
 .note-wrap {
   position: absolute;
-  width: 220px;
-  height: 140px;
+  width: clamp(200px, 19vw, 340px);
+  height: clamp(130px, 12vw, 210px);
+  animation: drift 7s ease-in-out infinite alternate;
 }
 .note {
   position: absolute;
   inset: 0;
-  border-radius: 4px;
-  padding: 20px;
+  border-radius: 6px;
+  padding: clamp(16px, 1.8vw, 24px);
   text-align: left;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 .note-back {
-  transform: translate(8px, 8px);
+  transform: translate(-10px, -10px) rotate(-3deg);
 }
 .note-title {
-  font-size: 20px;
+  font-size: clamp(20px, 1.9vw, 34px);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 .note-when {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: clamp(12px, 1vw, 16px);
   text-transform: uppercase;
 }
-.note-1 {
-  left: 0;
-  top: 40px;
-  transform: rotate(-4deg);
+/* Anchored to the centre so on wide screens they hug the hero instead of
+   drifting into the far corners; max() keeps them on-screen when narrower. */
+.note-1 { left: max(3%, calc(50% - 680px));  top: 9%;     rotate: -7deg; }
+.note-2 { right: max(3%, calc(50% - 680px)); top: 7%;     rotate: 6deg;  animation-delay: -2s; }
+.note-3 { right: max(3%, calc(50% - 640px)); bottom: 8%;  rotate: -5deg; animation-delay: -4s; }
+.note-4 { left: max(3%, calc(50% - 640px));  bottom: 7%;  rotate: 5deg;  animation-delay: -1s; }
+.note-5 { left: max(1%, calc(50% - 820px));  top: 40%;    rotate: 4deg;  animation-delay: -3s; }
+.note-6 { right: max(1%, calc(50% - 820px)); top: 42%;    rotate: -6deg; animation-delay: -5s; }
+@media (max-width: 1280px) {
+  .note-5, .note-6 { display: none; }
 }
-.note-2 {
-  left: 30%;
-  top: 0;
-  transform: rotate(5deg);
-  z-index: 1;
+
+/* ---------- stick figures ---------- */
+.stickman {
+  position: absolute;
+  color: var(--ink);
+  height: clamp(70px, 8vw, 130px);
+  width: auto;
+  overflow: visible;
 }
-.note-3 {
-  right: 0;
-  top: 80px;
-  transform: rotate(-6deg);
-  z-index: 2;
+/* waving next to the top-left note */
+.stick-1 { left: calc(max(3%, calc(50% - 680px)) + clamp(210px, 20vw, 360px)); top: 14%; }
+/* pointing at the bottom-right note */
+.stick-2 { right: calc(max(3%, calc(50% - 640px)) + clamp(210px, 20vw, 360px)); bottom: 9%; }
+/* walking toward the coffee note */
+.stick-3 { left: calc(max(3%, calc(50% - 640px)) + clamp(220px, 21vw, 370px)); bottom: 8%; transform: scaleX(-1); }
+/* two students high-fiving above the top-right note */
+.stick-4 { right: calc(max(3%, calc(50% - 680px)) + clamp(220px, 21vw, 380px)); top: 8%; height: clamp(70px, 7vw, 120px); }
+.limb-wave {
+  transform-origin: 30px 34px;
+  animation: wave 1.2s ease-in-out infinite alternate;
 }
-.bg-pink {
-  background: var(--pink);
+.limb-swing {
+  transform-origin: 30px 34px;
+  animation: swing 0.9s ease-in-out infinite alternate;
 }
-.bg-mint {
-  background: var(--mint);
+.burst {
+  animation: pop 1.6s ease-in-out infinite;
 }
-.bg-yellow {
-  background: var(--yellow);
+@keyframes wave {
+  from { transform: rotate(-12deg); }
+  to   { transform: rotate(14deg); }
 }
-.bg-olive {
-  background: var(--olive);
+@keyframes swing {
+  from { transform: rotate(-20deg); }
+  to   { transform: rotate(20deg); }
 }
-.bg-orange {
-  background: var(--orange);
+@keyframes pop {
+  0%, 60%, 100% { opacity: 0; }
+  70%, 90% { opacity: 1; }
 }
-.bg-cream {
-  background: #ece6d8;
+@media (prefers-reduced-motion: reduce) {
+  .limb-wave, .limb-swing, .burst { animation: none; }
 }
-@media (max-width: 600px) {
-  .notes {
-    height: 400px;
-  }
-  .note-wrap {
-    width: 200px;
-  }
-  .note-1 {
-    left: 0;
-    top: 0;
-  }
-  .note-2 {
-    left: auto;
-    right: 0;
-    top: 120px;
-  }
-  .note-3 {
-    left: 10px;
-    right: auto;
-    top: 240px;
-  }
+@media (max-width: 1000px), (max-height: 620px) {
+  .stickman { display: none; }
+}
+
+@keyframes drift {
+  from { translate: 0 0; }
+  to   { translate: 0 -10px; }
+}
+@keyframes spin-in {
+  from { transform: rotate(-180deg) scale(0.6); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-wrap, .hero-logo { animation: none; }
+  .cta, .cta-arrow { transition: none; }
+}
+
+.bg-pink { background: var(--pink); }
+.bg-mint { background: var(--mint); }
+.bg-yellow { background: var(--yellow); }
+.bg-olive { background: var(--olive); }
+.bg-orange { background: var(--orange); }
+.bg-cream { background: #ece6d8; }
+
+/* Narrow or short screens: notes peek in from the top and bottom edges. */
+@media (max-width: 760px), (max-height: 620px) {
+  .note-wrap { width: 190px; height: 120px; }
+  .note-1 { left: -40px; top: -30px; }
+  .note-2 { right: -50px; top: -20px; }
+  .note-3 { right: -40px; bottom: -30px; }
+  .note-4 { left: -50px; bottom: -20px; }
+  .note-title { font-size: 18px; }
+}
+
+.cta { white-space: nowrap; }
+@media (max-width: 420px) {
+  .cta { padding: 16px 24px; font-size: 16px; }
 }
