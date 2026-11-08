@@ -5,6 +5,7 @@ export const ACTIVITY_TYPES = ['study', 'food', 'sports', 'career', 'other'] as 
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
 
 export interface Profile {
+  schoolId: number;
   name: string; 
   schoolYear: SchoolYear;
   major?: string | null;

@@ -9,8 +9,8 @@ export class TimeRange {
   }
 
   static of(start: Date | string, end?: Date | string | null, defaultHours = 2): TimeRange { //the default period is two hours
-    const start = new Date(start); //the start time given by the user
-    const end = end ? new Date(end) : new Date(s.getTime() + defaultHours * 3600_000); //the default end time is two hours from the start time
+    const s = new Date(start); //the start time given by the user
+    const e = end ? new Date(end) : new Date(s.getTime() + defaultHours * 3600_000); //the default end time is two hours from the start time
     return new TimeRange(s, e);
   }
 

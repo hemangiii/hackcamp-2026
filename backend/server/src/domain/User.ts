@@ -1,4 +1,4 @@
-import type { ActivityType, NewProfileInput, SchoolYear } from '../types.js';
+import type { ActivityType, Profile, SchoolYear } from './types.js';
 
 export class User {
   private constructor(
@@ -12,7 +12,7 @@ export class User {
     public interestedTypes: ActivityType[],
   ) {}
 
-  static create(id: string, input: NewProfileInput, email: string): User {
+  static create(id: string, input: Profile, email: string): User {
     const name = input.name.trim();
     if (!name) {
       throw new Error('Name cannot be empty');

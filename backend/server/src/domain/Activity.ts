@@ -1,3 +1,6 @@
+import type { TimeRange } from './TimeRange.ts';
+import type { User } from './User.ts';
+
 export type ActivityStatus = 'upcoming' | 'ongoing' | 'ended' | 'deleted';
 
 export class Activity {

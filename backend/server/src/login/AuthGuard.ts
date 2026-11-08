@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import { AuthUser } from './AuthUser.ts';
+import { AuthUser } from './AuthUser.js';
 
-const NS = 'https://campusconnect.app';
+const NS = 'https://oncampus.app';
 
 export class AuthGuard {
   static requireVerified(req: Request, res: Response, next: NextFunction): void {

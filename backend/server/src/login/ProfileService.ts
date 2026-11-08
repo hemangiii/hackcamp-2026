@@ -4,4 +4,4 @@ import { User } from '../domain/User.js';
 import { ConflictError } from '../domain/errors.js';
 import type { UserRepository } from '../repositories/UserRepository.js';
 import type { SchoolRepository } from '../repositories/SchoolRepository.js';
-import type { NewProfileInput } from '../types.js';
+import type { Profile } from '../types.js';

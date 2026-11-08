@@ -49,4 +49,4 @@ CREATE INDEX IF NOT EXISTS idx_req_user ON join_requests(user_id);
 INSERT OR IGNORE INTO schools (name, email_domain) VALUES
   ('University of British Columbia', 'student.ubc.ca'),
   ('Simon Fraser University', 'sfu.ca'),
-  ('University of Victoria', 'uvic.ca')
+  ('University of Victoria', 'uvic.ca');
