@@ -79,6 +79,14 @@ export class JoinRequestService {
       return await this.requests.listForActivity(activityId);
   }
 
+  async listForUser(auth: AuthUser) {
+    if (!(await this.users.find(auth.id))) {
+      throw new AppError('Complete your profile first', 400);
+    }
+
+    return this.requests.listForUser(auth.id);
+  }
+
   /** A temporary email failure must not undo a successful database operation. */
   private async sendNotificationSafely(send: () => Promise<void>): Promise<void> {
     try {

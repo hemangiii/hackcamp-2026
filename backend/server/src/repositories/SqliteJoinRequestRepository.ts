@@ -45,4 +45,13 @@ export class SqliteJoinRequestRepository implements JoinRequestRepository {
       )
       .all(activityId) as JoinRequestRecord[];
   }
+
+  async listForUser(userId: string) {
+    return this.db
+      .prepare(
+        `SELECT id,activity_id AS activityId,user_id AS userId,status,created_at AS createdAt
+         FROM join_requests WHERE user_id=? ORDER BY created_at DESC`,
+      )
+      .all(userId) as JoinRequestRecord[];
+  }
 }

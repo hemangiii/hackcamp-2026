@@ -13,4 +13,5 @@ export interface JoinRequestRepository {
   find(id: string): Promise<JoinRequestRecord | null>;
   updateStatus(id: string, status: JoinRequestStatus): Promise<JoinRequestRecord | null>;
   listForActivity(activityId: string): Promise<JoinRequestRecord[]>;
+  listForUser(userId: string): Promise<JoinRequestRecord[]>;
 }

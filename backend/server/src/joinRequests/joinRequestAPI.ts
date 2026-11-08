@@ -8,6 +8,14 @@ export function joinRequestAPI(service: JoinRequestService, authGuard: any) {
 
   const me = (req: any) => req.res.locals.user as AuthUser;
 
+  router.get('/me', authGuard, async (req, res, next) => {
+    try {
+      res.json({ data: await service.listForUser(me(req)) });
+    } catch (e) {
+      next(e);
+    }
+  });
+
   router.post('/:activityId/join', authGuard, async (req, res, next) => {
     try {
       res.status(201).json({

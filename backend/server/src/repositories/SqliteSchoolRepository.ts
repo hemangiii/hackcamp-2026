@@ -8,4 +8,10 @@ export class SqliteSchoolRepository implements SchoolRepository {
     if (!row) throw new Error('School not found');
     return row;
   }
+
+  list(): SchoolRecord[] {
+    return this.database
+      .prepare('SELECT id, name, email_domain AS emailDomain FROM schools ORDER BY name')
+      .all() as SchoolRecord[];
+  }
 }

@@ -21,6 +21,7 @@ import { RecommendationService } from './recommendations/RecommendationService.j
 import { ConsoleEmailService } from './notifications/EmailService.js';
 import { NotificationService } from './notifications/NotificationService.js';
 import { ResendEmailService } from './notifications/ResendEmailService.js';
+import { schoolAPI } from './schools/schoolAPI.js';
 
 const app = express();
 
@@ -110,6 +111,7 @@ app.put('/api/profile', requireConfiguredAuth, async (req, res, next) => {
 
 app.use('/api/activities', activityAPI(activityService, requireConfiguredAuth));
 app.use('/api/join-requests', joinRequestAPI(joinRequestService, requireConfiguredAuth));
+app.use('/api/schools', schoolAPI(new SqliteSchoolRepository(db)));
 
 app.get('/api/recommendations', requireConfiguredAuth, async (req, res, next) => {
   try {

@@ -1,4 +1,5 @@
 export type Profile = { schoolId: number; name: string; schoolYear: 'first' | 'second' | 'third' | 'fourth' | 'fourth+' | 'graduate'; major: string | null; hobbies: string[]; interestedTypes: ('study' | 'food' | 'sports' | 'career' | 'other')[] };
+export type School = { id: number; name: string };
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 async function request<T>(path: string, init?: RequestInit): Promise<T> { const response = await fetch(`${baseUrl}${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...(import.meta.env.VITE_AUTH_TOKEN ? { Authorization: `Bearer ${import.meta.env.VITE_AUTH_TOKEN}` } : {}), ...init?.headers } }); const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body.error ?? `Request failed (${response.status})`); return body.data as T; }
-export const api = { getProfile: () => request<Profile | null>('/api/profile'), saveProfile: (profile: Profile) => request<Profile>('/api/profile', { method: 'PUT', body: JSON.stringify(profile) }) };
+export const api = { getProfile: () => request<Profile | null>('/api/profile'), getSchools: () => request<School[]>('/api/schools'), saveProfile: (profile: Profile) => request<Profile>('/api/profile', { method: 'PUT', body: JSON.stringify(profile) }) };
