@@ -1,5 +1,9 @@
 # hackcamp-2026
 
+## API documentation
+
+See [backend/server/API.md](backend/server/API.md) for endpoint addresses, request and response formats, authentication requirements, and error codes.
+
 ## Email notifications
 
 The backend uses Resend for production notification emails. From the repository root, create a local environment file:
