@@ -29,14 +29,15 @@ const frontendOrigins = process.env.FRONTEND_ORIGIN
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const service = new ProfileService(new SqliteUserRepository(db), new SqliteSchoolRepository(db));
 const users = new SqliteUserRepository(db);
+const schools = new SqliteSchoolRepository(db);
 const activities = new SqliteActivityRepository(db);
 const activityService = new ActivityService(activities, users);
 const emailService = process.env.RESEND_API_KEY && process.env.EMAIL_FROM
   ? new ResendEmailService(process.env.EMAIL_FROM)
   : new ConsoleEmailService();
 const notifications = new NotificationService(emailService);
+const service = new ProfileService(users, schools, notifications);
 const joinRequestService = new JoinRequestService(
   new SqliteJoinRequestRepository(db),
   activities,

@@ -11,6 +11,14 @@ export class NotificationService {
     await this.email.send({ to, subject, text });
   }
 
+  async notifyWelcome(userEmail: string, name: string): Promise<void> {
+    await this.notify(
+      userEmail,
+      'Welcome to OnCampus',
+      [`Hi ${name},`, '', 'Welcome to OnCampus! Your account is ready.', '', 'Find classmates, create activities, and join campus events.'].join('\n'),
+    );
+  }
+
   async notifyActivityCreatorOfJoinRequest(
     creatorEmail: string,
     activity: ActivityRecord,
