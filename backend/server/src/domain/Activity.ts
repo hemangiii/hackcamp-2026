@@ -71,7 +71,7 @@ export class Activity {
   modifyLocation(newLocation: string): void {
     const l = newLocation.trim();
     if (!l || l.length > 100) {
-      throw new Error('Location must be 1-200 characters');
+      throw new Error('Location must be 1-100 characters');
     }
     this.location = l;
   }
