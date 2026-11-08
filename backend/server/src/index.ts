@@ -1,0 +1,39 @@
+import express, { type ErrorRequestHandler } from 'express';
+import cors from 'cors';
+import { auth } from 'express-oauth2-jwt-bearer';
+import { z } from 'zod';
+import { db } from './db.js';
+import { AuthGuard } from './login/AuthGuard.js';
+import { AuthUser } from './login/AuthUser.js';
+import { ProfileService } from './login/ProfileService.js';
+import { SqliteSchoolRepository } from './repositories/SqliteSchoolRepository.js';
+import { SqliteUserRepository } from './repositories/SqliteUserRepository.js';
+import { SCHOOL_YEARS, ACTIVITY_TYPES } from './types.js';
+import { AppError } from './domain/errors.js';
+
+const app = express();
+const service = new ProfileService(new SqliteUserRepository(db), new SqliteSchoolRepository(db));
+const profileSchema = z.object({ schoolId: z.number().int().positive(), name: z.string().trim().min(1).max(100), schoolYear: z.enum(SCHOOL_YEARS), major: z.string().max(100).nullable().optional(), hobbies: z.array(z.string().trim().min(1).max(50)).max(20), interestedTypes: z.array(z.enum(ACTIVITY_TYPES)).max(ACTIVITY_TYPES.length) });
+
+app.use(cors({ origin: process.env.FRONTEND_ORIGIN?.split(',') ?? true }));
+app.use(express.json({ limit: '32kb' }));
+app.get('/api/health', (_req, res) => res.json({ ok: true }));
+
+if (process.env.AUTH0_ISSUER_BASE_URL && process.env.AUTH0_AUDIENCE) {
+  app.use(auth({ issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL, audience: process.env.AUTH0_AUDIENCE, tokenSigningAlg: 'RS256' }));
+}
+
+const requireConfiguredAuth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (!process.env.AUTH0_ISSUER_BASE_URL || !process.env.AUTH0_AUDIENCE) { res.status(503).json({ error: 'Authentication is not configured' }); return; }
+  AuthGuard.requireVerified(req, res, next);
+};
+const serialize = (user: Awaited<ReturnType<ProfileService['get']>>) => user && ({ id: user.id, email: user.email, schoolId: user.schoolId, name: user.name, schoolYear: user.schoolYear, major: user.major, hobbies: user.hobbies, interestedTypes: user.interestedTypes });
+
+app.get('/api/profile', requireConfiguredAuth, async (_req, res, next) => { try { res.json({ data: serialize(await service.get(res.locals.user as AuthUser)) }); } catch (e) { next(e); } });
+app.put('/api/profile', requireConfiguredAuth, async (req, res, next) => { try { const input = profileSchema.parse(req.body); res.json({ data: serialize(await service.save(res.locals.user as AuthUser, input)) }); } catch (e) { next(e); } });
+
+const errors: ErrorRequestHandler = (error, _req, res, _next) => { if (error instanceof z.ZodError) { res.status(400).json({ error: 'Invalid request', details: error.issues }); return; } if (error instanceof AppError) { res.status(error.status).json({ error: error.message }); return; } res.status(500).json({ error: 'Unexpected server error' }); };
+app.use(errors);
+const port = Number(process.env.PORT ?? 3000);
+if (process.env.NODE_ENV !== 'test') app.listen(port, () => console.log(`API listening on http://localhost:${port}`));
+export default app;

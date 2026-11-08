@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   name             TEXT NOT NULL,
   school_id        INTEGER NOT NULL REFERENCES schools(id),
   school_year      TEXT NOT NULL
-    CHECK (school_year IN ('first','second','third','fourth','graduate')),
+    CHECK (school_year IN ('first','second','third','fourth','fourth+','graduate')),
   major            TEXT,
   hobbies          TEXT NOT NULL DEFAULT '[]',
   interested_types TEXT NOT NULL DEFAULT '[]',

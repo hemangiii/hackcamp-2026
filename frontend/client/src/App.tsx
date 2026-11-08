@@ -1,122 +1,13 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
-
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+import { useEffect, useState } from 'react';
+import { api, type Profile } from './api';
+import './App.css';
+const types = ['study', 'food', 'sports', 'career', 'other'] as const;
+const empty: Profile = { schoolId: 1, name: '', schoolYear: 'first', major: null, hobbies: [], interestedTypes: [] };
+export default function App() {
+  const [profile, setProfile] = useState<Profile>(empty); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [message, setMessage] = useState('');
+  useEffect(() => { api.getProfile().then((data) => data && setProfile(data)).catch((e: Error) => setMessage(e.message)).finally(() => setLoading(false)); }, []);
+  const update = (key: keyof Profile, value: unknown) => setProfile((current) => ({ ...current, [key]: value }));
+  const submit = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); setMessage(''); try { await api.saveProfile(profile); setMessage('Profile saved.'); } catch (e) { setMessage((e as Error).message); } finally { setSaving(false); } };
+  if (loading) return <main className="app"><p>Loading profile…</p></main>;
+  return <main className="app"><h1>OnCampus</h1><p>Tell us a little about yourself so we can personalize campus activities.</p><section className="card"><h2>Your profile</h2>{message && <p className="message">{message}</p>}<form onSubmit={submit}><label>Name<input required value={profile.name} onChange={(e) => update('name', e.target.value)} /></label><label>School<select value={profile.schoolId} onChange={(e) => update('schoolId', Number(e.target.value))}><option value={1}>University of British Columbia</option><option value={2}>Simon Fraser University</option><option value={3}>University of Victoria</option></select></label><label>School year<select value={profile.schoolYear} onChange={(e) => update('schoolYear', e.target.value)}>{['first','second','third','fourth','fourth+','graduate'].map((year) => <option key={year}>{year}</option>)}</select></label><label>Major<input value={profile.major ?? ''} onChange={(e) => update('major', e.target.value || null)} /></label><label>Hobbies<input value={profile.hobbies.join(', ')} onChange={(e) => update('hobbies', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))} placeholder="hiking, music, cooking" /></label><fieldset><legend>Interested in</legend><div className="choices">{types.map((type) => <label key={type}><input type="checkbox" checked={profile.interestedTypes.includes(type)} onChange={(e) => update('interestedTypes', e.target.checked ? [...profile.interestedTypes, type] : profile.interestedTypes.filter((v) => v !== type))} />{type}</label>)}</div></fieldset><button disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button></form></section></main>;
 }
-
-export default App
