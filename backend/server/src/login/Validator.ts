@@ -1,5 +1,5 @@
 export class Validator {
-  static email(value) {
+  static email(value: string) {
     const v = value.trim().toLowerCase();
     const pattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
     if (!pattern.test(v)) {
@@ -8,7 +8,7 @@ export class Validator {
     return v;
   }
 
-  static schoolEmail(value, schoolDomain) {
+  static schoolEmail(value: string, schoolDomain: string) {
     const v = Validator.email(value);
     const host = v.split('@')[1];
     const domain = schoolDomain.trim().toLowerCase();
