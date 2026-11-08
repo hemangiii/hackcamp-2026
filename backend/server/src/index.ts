@@ -24,6 +24,10 @@ import { ResendEmailService } from './notifications/ResendEmailService.js';
 import { schoolAPI } from './schools/schoolAPI.js';
 
 const app = express();
+const frontendOrigins = process.env.FRONTEND_ORIGIN
+  ?.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const service = new ProfileService(new SqliteUserRepository(db), new SqliteSchoolRepository(db));
 const users = new SqliteUserRepository(db);
@@ -52,7 +56,7 @@ const profileSchema = z.object({
 });
 
 
-app.use(cors({ origin: process.env.FRONTEND_ORIGIN?.split(',') ?? true }));
+app.use(cors({ origin: frontendOrigins?.length ? frontendOrigins : true }));
 app.use(express.json({ limit: '32kb' }));
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

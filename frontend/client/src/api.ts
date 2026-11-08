@@ -1,4 +1,5 @@
 import { sampleApi } from './sampleData';
+import { getAccessToken } from './auth/authToken';
 
 export const ACTIVITY_TYPES = ['study', 'food', 'sports', 'career', 'other'] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
@@ -47,7 +48,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      ...(import.meta.env.VITE_AUTH_TOKEN ? { Authorization: `Bearer ${import.meta.env.VITE_AUTH_TOKEN}` } : {}),
+      ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {}),
       ...init?.headers,
     },
   });
