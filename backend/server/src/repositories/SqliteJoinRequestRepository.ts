@@ -35,6 +35,12 @@ export class SqliteJoinRequestRepository implements JoinRequestRepository {
     return this.find(id);
   }
 
+  async delete(id: string, userId: string) {
+    return this.db
+      .prepare("DELETE FROM join_requests WHERE id = ? AND user_id = ? AND status = 'pending'")
+      .run(id, userId).changes > 0;
+  }
+
   async listForActivity(activityId: string) {
     return this.db
       .prepare(
@@ -44,5 +50,14 @@ export class SqliteJoinRequestRepository implements JoinRequestRepository {
          ORDER BY created_at`,
       )
       .all(activityId) as JoinRequestRecord[];
+  }
+
+  async listForUser(userId: string) {
+    return this.db
+      .prepare(
+        `SELECT id,activity_id AS activityId,user_id AS userId,status,created_at AS createdAt
+         FROM join_requests WHERE user_id=? ORDER BY created_at DESC`,
+      )
+      .all(userId) as JoinRequestRecord[];
   }
 }
