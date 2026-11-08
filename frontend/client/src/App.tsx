@@ -1,13 +1,61 @@
 import { useEffect, useState } from 'react';
-import { api, type Profile } from './api';
+import { api, usingSampleData, type Profile as ProfileData } from './api';
+import { NavBar, type Page } from './components/NavBar';
+import { Discover } from './pages/Discover';
+import { Profile } from './pages/Profile';
+import { Welcome } from './pages/Welcome';
 import './App.css';
-const types = ['study', 'food', 'sports', 'career', 'other'] as const;
-const empty: Profile = { schoolId: 1, name: '', schoolYear: 'first', major: null, hobbies: [], interestedTypes: [] };
+
+const emptyProfile: ProfileData = { schoolId: 1, name: '', schoolYear: 'first', major: null, hobbies: [], interestedTypes: [] };
+
 export default function App() {
-  const [profile, setProfile] = useState<Profile>(empty); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [message, setMessage] = useState('');
-  useEffect(() => { api.getProfile().then((data) => data && setProfile(data)).catch((e: Error) => setMessage(e.message)).finally(() => setLoading(false)); }, []);
-  const update = (key: keyof Profile, value: unknown) => setProfile((current) => ({ ...current, [key]: value }));
-  const submit = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); setMessage(''); try { await api.saveProfile(profile); setMessage('Profile saved.'); } catch (e) { setMessage((e as Error).message); } finally { setSaving(false); } };
-  if (loading) return <main className="app"><p>Loading profile…</p></main>;
-  return <main className="app"><h1>OnCampus</h1><p>Tell us a little about yourself so we can personalize campus activities.</p><section className="card"><h2>Your profile</h2>{message && <p className="message">{message}</p>}<form onSubmit={submit}><label>Name<input required value={profile.name} onChange={(e) => update('name', e.target.value)} /></label><label>School<select value={profile.schoolId} onChange={(e) => update('schoolId', Number(e.target.value))}><option value={1}>University of British Columbia</option><option value={2}>Simon Fraser University</option><option value={3}>University of Victoria</option></select></label><label>School year<select value={profile.schoolYear} onChange={(e) => update('schoolYear', e.target.value)}>{['first','second','third','fourth','fourth+','graduate'].map((year) => <option key={year}>{year}</option>)}</select></label><label>Major<input value={profile.major ?? ''} onChange={(e) => update('major', e.target.value || null)} /></label><label>Hobbies<input value={profile.hobbies.join(', ')} onChange={(e) => update('hobbies', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))} placeholder="hiking, music, cooking" /></label><fieldset><legend>Interested in</legend><div className="choices">{types.map((type) => <label key={type}><input type="checkbox" checked={profile.interestedTypes.includes(type)} onChange={(e) => update('interestedTypes', e.target.checked ? [...profile.interestedTypes, type] : profile.interestedTypes.filter((v) => v !== type))} />{type}</label>)}</div></fieldset><button disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button></form></section></main>;
+  const [entered, setEntered] = useState(false);
+  const [page, setPage] = useState<Page>('discover');
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  useEffect(() => {
+    api
+      .getProfile()
+      .then(setProfile)
+      .catch(() => setProfile(null))
+      .finally(() => setProfileLoaded(true));
+  }, []);
+
+  if (!entered) {
+    return (
+      <Welcome
+        onSignUp={() => {
+          setPage('profile');
+          setEntered(true);
+        }}
+        onLogIn={() => {
+          setPage('discover');
+          setEntered(true);
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="shell">
+      {usingSampleData && <p className="sample-banner">Sample data: nothing is saved to the server.</p>}
+      <NavBar current={page} onNavigate={setPage} />
+      <main>
+        {page === 'discover' && <Discover schoolId={profile?.schoolId ?? null} />}
+        {page === 'create' && (
+          <section className="page">
+            <h1 className="date-heading">Create your plan</h1>
+            <p className="status">Coming next.</p>
+          </section>
+        )}
+        {page === 'profile' &&
+          (profileLoaded ? (
+            <Profile initial={profile ?? emptyProfile} onSaved={setProfile} />
+          ) : (
+            <p className="status">Loading profile…</p>
+          ))}
+      </main>
+    </div>
+  );
 }
