@@ -17,6 +17,8 @@ import { activityAPI } from './activities/activityAPI.js';
 import { JoinRequestService } from './joinRequests/JoinRequestService.js';
 import { joinRequestAPI } from './joinRequests/joinRequestAPI.js';
 import { RecommendationService } from './recommendations/RecommendationService.js';
+import { ConsoleEmailService } from './notifications/EmailService.js';
+import { NotificationService } from './notifications/NotificationService.js';
 
 const app = express();
 
@@ -24,10 +26,12 @@ const service = new ProfileService(new SqliteUserRepository(db), new SqliteSchoo
 const users = new SqliteUserRepository(db);
 const activities = new SqliteActivityRepository(db);
 const activityService = new ActivityService(activities, users);
+const notifications = new NotificationService(new ConsoleEmailService());
 const joinRequestService = new JoinRequestService(
   new SqliteJoinRequestRepository(db),
   activities,
   users,
+  notifications,
 );
 const recommendations = new RecommendationService(activities, users);
 
