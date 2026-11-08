@@ -11,7 +11,16 @@ const schema = z.object({
   location: z.string(),
   startTime: z.string(),
   endTime: z.string(),
-  link: z.string().url().nullable().optional(),
+  link: z.preprocess(
+    (value) => typeof value === 'string' && value.trim() === '' ? null : value,
+    z.string()
+      .url('Link must be a valid URL')
+      .refine((value) => value.startsWith('http://') || value.startsWith('https://'), {
+        message: 'Links must start with http:// or https://',
+      })
+      .nullable()
+      .optional(),
+  ),
 });
 
 export function activityAPI(service: ActivityService, authGuard: any) {
