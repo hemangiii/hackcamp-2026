@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { type ErrorRequestHandler } from 'express';
 import cors from 'cors';
 import { auth } from 'express-oauth2-jwt-bearer';
@@ -19,6 +20,7 @@ import { joinRequestAPI } from './joinRequests/joinRequestAPI.js';
 import { RecommendationService } from './recommendations/RecommendationService.js';
 import { ConsoleEmailService } from './notifications/EmailService.js';
 import { NotificationService } from './notifications/NotificationService.js';
+import { ResendEmailService } from './notifications/ResendEmailService.js';
 
 const app = express();
 
@@ -26,7 +28,10 @@ const service = new ProfileService(new SqliteUserRepository(db), new SqliteSchoo
 const users = new SqliteUserRepository(db);
 const activities = new SqliteActivityRepository(db);
 const activityService = new ActivityService(activities, users);
-const notifications = new NotificationService(new ConsoleEmailService());
+const emailService = process.env.RESEND_API_KEY && process.env.EMAIL_FROM
+  ? new ResendEmailService(process.env.EMAIL_FROM)
+  : new ConsoleEmailService();
+const notifications = new NotificationService(emailService);
 const joinRequestService = new JoinRequestService(
   new SqliteJoinRequestRepository(db),
   activities,

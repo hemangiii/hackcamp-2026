@@ -1,5 +1,26 @@
 # hackcamp-2026
 
+## Email notifications
+
+The backend uses Resend for production notification emails. From the repository root, create a local environment file:
+
+```sh
+cp backend/server/.env.example backend/server/.env
+```
+
+Create a Resend account, generate an API key in the Resend dashboard, and set the values in `backend/server/.env`:
+
+```env
+RESEND_API_KEY=
+EMAIL_FROM=
+```
+
+`RESEND_API_KEY` is a private credential and must never be committed or exposed to frontend code. The `EMAIL_FROM` address must use a domain verified in Resend when sending from a custom domain.
+
+If `RESEND_API_KEY` or `EMAIL_FROM` is missing, the backend uses `ConsoleEmailService`. In that mode, notification emails are printed to the server log and no real email is sent. This is useful for local development.
+
+The local `backend/server/.env` file is ignored by Git. Commit only `backend/server/.env.example`, which contains placeholders and no credentials.
+
 ## Backend authentication
 
 The API uses Auth0-issued RS256 access tokens. Auth0 handles account creation, login, and email verification; the backend validates the bearer token and only allows verified addresses from:
