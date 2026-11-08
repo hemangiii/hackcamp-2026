@@ -51,12 +51,11 @@ export class JoinRequestService {
     return this.requests.updateStatus(id, status);
   }
 
-  list(auth: AuthUser, activityId: string) {
-    return this.activities.findById(activityId).then((activity) => {
+  async list(auth: AuthUser, activityId: string) {
+    const activity = await this.activities.findById(activityId);
       if (!activity || activity.creatorId !== auth.id) {
-        throw new AppError('Only the creator can view requests', 403);
+          throw new AppError('Only the creator can view requests', 403);
       }
-      return this.requests.listForActivity(activityId);
-    });
+      return await this.requests.listForActivity(activityId);
   }
 }
