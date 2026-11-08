@@ -16,6 +16,15 @@ export function joinRequestAPI(service: JoinRequestService, authGuard: any) {
     }
   });
 
+  router.delete('/:id', authGuard, async (req, res, next) => {
+    try {
+      await service.cancel(me(req), req.params.id);
+      res.status(204).send();
+    } catch (e) {
+      next(e);
+    }
+  });
+
   router.post('/:activityId/join', authGuard, async (req, res, next) => {
     try {
       res.status(201).json({

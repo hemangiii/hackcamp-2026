@@ -59,6 +59,14 @@ export class JoinRequestService {
       throw new AppError('Only the creator can review requests', 403);
     }
 
+    if (request.status !== 'pending') {
+      throw new AppError('Only pending requests can change status', 409);
+    }
+
+    if (status !== 'accepted' && status !== 'rejected') {
+      throw new AppError('Invalid join request status', 400);
+    }
+
     const updatedRequest = await this.requests.updateStatus(id, status);
     const applicant = await this.users.find(request.userId);
 
@@ -69,6 +77,26 @@ export class JoinRequestService {
     }
 
     return updatedRequest;
+  }
+
+  async cancel(auth: AuthUser, id: string) {
+    const request = await this.requests.find(id);
+    if (!request) {
+      throw new AppError('Join request not found', 404);
+    }
+
+    if (request.userId !== auth.id) {
+      throw new AppError('You can only cancel your own join requests', 403);
+    }
+
+    if (request.status !== 'pending') {
+      throw new AppError('Only pending requests can be cancelled', 409);
+    }
+
+    const deleted = await this.requests.delete(id, auth.id);
+    if (!deleted) {
+      throw new AppError('Join request could not be cancelled', 409);
+    }
   }
 
   async list(auth: AuthUser, activityId: string) {

@@ -35,6 +35,12 @@ export class SqliteJoinRequestRepository implements JoinRequestRepository {
     return this.find(id);
   }
 
+  async delete(id: string, userId: string) {
+    return this.db
+      .prepare("DELETE FROM join_requests WHERE id = ? AND user_id = ? AND status = 'pending'")
+      .run(id, userId).changes > 0;
+  }
+
   async listForActivity(activityId: string) {
     return this.db
       .prepare(
