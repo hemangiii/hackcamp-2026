@@ -1,13 +1,159 @@
 import { useEffect, useState } from 'react';
-import { api, type Profile, type School } from './api';
+import { useAuth0 } from '@auth0/auth0-react';
+import { api, setTokenGetter, usingSampleData, type Profile as ProfileData } from './api';
+import { NavBar, type Page } from './components/NavBar';
+import { SCHOOL_OPTIONS } from './format';
+import { CreateActivity } from './pages/CreateActivity';
+import { Discover } from './pages/Discover';
+import { LogIn } from './pages/LogIn';
+import { MyActivities } from './pages/MyActivities';
+import { Profile } from './pages/Profile';
+import { SignUp } from './pages/SignUp';
+import { VerifyEmail } from './pages/VerifyEmail';
+import { Welcome } from './pages/Welcome';
 import './App.css';
-const types = ['study', 'food', 'sports', 'career', 'other'] as const;
-const empty: Profile = { schoolId: 1, name: '', schoolYear: 'first', major: null, hobbies: [], interestedTypes: [] };
+
+const emptyProfile: ProfileData = { schoolId: 1, name: '', schoolYear: 'first', major: null, hobbies: [], interestedTypes: [] };
+
+const schoolForEmail = (email?: string) =>
+  SCHOOL_OPTIONS.find((s) => email?.toLowerCase().endsWith(`@${s.domain}`))?.id ?? 1;
+
+type PublicScreen = 'welcome' | 'signup' | 'login';
+
+const scrollTop = () => window.scrollTo(0, 0);
+
+/** Welcome, Sign up and Log in: what you see before you're signed in. */
+function PublicScreens({
+  onSignUp,
+  onLogIn,
+}: {
+  onSignUp: (schoolId: number, email: string) => void;
+  onLogIn: (email: string) => void;
+}) {
+  const [screen, setScreen] = useState<PublicScreen>('welcome');
+  const go = (next: PublicScreen) => {
+    setScreen(next);
+    scrollTop();
+  };
+
+  if (screen === 'signup') return <SignUp onBack={() => go('welcome')} onLogIn={() => go('login')} onContinue={onSignUp} />;
+  if (screen === 'login') return <LogIn onBack={() => go('welcome')} onSignUp={() => go('signup')} onContinue={onLogIn} />;
+  return <Welcome onSignUp={() => go('signup')} onLogIn={() => go('login')} />;
+}
+
+/** The signed-in app: nav plus the four pages. */
+function MainApp({ userId, defaultSchoolId, onLogOut }: { userId: string; defaultSchoolId: number; onLogOut: () => void }) {
+  const [page, setPage] = useState<Page>('discover');
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  useEffect(() => {
+    api
+      .getProfile()
+      .then((p) => {
+        setProfile(p);
+        // First visit after sign-up: step 2 is filling in the profile.
+        if (!p) setPage('profile');
+      })
+      .catch(() => setProfile(null))
+      .finally(() => setProfileLoaded(true));
+  }, []);
+
+  const navigate = (next: Page) => {
+    setPage(next);
+    scrollTop();
+  };
+
+  return (
+    <div className="shell">
+      {usingSampleData && <p className="sample-banner">Sample data: nothing is saved to the server.</p>}
+      <NavBar current={page} onNavigate={navigate} onLogOut={onLogOut} />
+      <main>
+        {page === 'discover' && <Discover schoolId={profile?.schoolId ?? null} />}
+        {page === 'create' && <CreateActivity onViewDiscover={() => navigate('discover')} />}
+        {page === 'mine' && <MyActivities userId={userId} onDiscover={() => navigate('discover')} />}
+        {page === 'profile' &&
+          (profileLoaded ? (
+            <Profile
+              key={profile ? 'saved' : 'new'}
+              initial={profile ?? { ...emptyProfile, schoolId: defaultSchoolId }}
+              onSaved={setProfile}
+            />
+          ) : (
+            <p className="status page">Loading profile…</p>
+          ))}
+      </main>
+    </div>
+  );
+}
+
+/** No Auth0 configured: click straight through with fake data. */
+function SampleApp() {
+  const [signedIn, setSignedIn] = useState<{ schoolId: number } | null>(null);
+  if (!signedIn)
+    return (
+      <PublicScreens
+        onSignUp={(schoolId) => setSignedIn({ schoolId })}
+        onLogIn={(email) => setSignedIn({ schoolId: schoolForEmail(email) })}
+      />
+    );
+  return <MainApp userId="me" defaultSchoolId={signedIn.schoolId} onLogOut={() => setSignedIn(null)} />;
+}
+
+/**
+ * Real sign-in through Auth0. Auth0 hosts the sign-up/login pages and sends
+ * the verify-your-email message; the backend rejects tokens whose email
+ * isn't verified, so unverified students wait on the VerifyEmail screen.
+ */
+function LiveApp() {
+  const { isLoading, isAuthenticated, user, error, loginWithRedirect, logout, getAccessTokenSilently } = useAuth0();
+
+  useEffect(() => {
+    setTokenGetter(isAuthenticated ? () => getAccessTokenSilently() : null);
+  }, [isAuthenticated, getAccessTokenSilently]);
+
+  const logOut = () => logout({ logoutParams: { returnTo: window.location.origin } });
+
+  if (isLoading) return <p className="status page">Loading…</p>;
+
+  if (error) {
+    return (
+      <div className="page">
+        <p className="status status-error" role="alert">
+          Sign-in problem: {error.message}
+        </p>
+        <button className="cta" onClick={logOut}>
+          Back to start
+        </button>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user)
+    return (
+      <PublicScreens
+        onSignUp={(_schoolId, email) =>
+          loginWithRedirect({ authorizationParams: { screen_hint: 'signup', login_hint: email } })
+        }
+        onLogIn={(email) => loginWithRedirect({ authorizationParams: { login_hint: email } })}
+      />
+    );
+
+  if (!user.email_verified)
+    return (
+      <VerifyEmail
+        email={user.email ?? 'your school email'}
+        onCheckAgain={async () => {
+          // Fetch fresh tokens so Auth0 re-reads email_verified.
+          await getAccessTokenSilently({ cacheMode: 'off' });
+        }}
+        onLogOut={logOut}
+      />
+    );
+
+  return <MainApp userId={user.sub ?? ''} defaultSchoolId={schoolForEmail(user.email)} onLogOut={logOut} />;
+}
+
 export default function App() {
-  const [profile, setProfile] = useState<Profile>(empty); const [schools, setSchools] = useState<School[]>([]); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [message, setMessage] = useState('');
-  useEffect(() => { Promise.all([api.getProfile(), api.getSchools()]).then(([data, schoolList]) => { if (data) setProfile(data); setSchools(schoolList); }).catch((e: Error) => setMessage(e.message)).finally(() => setLoading(false)); }, []);
-  const update = (key: keyof Profile, value: unknown) => setProfile((current) => ({ ...current, [key]: value }));
-  const submit = async (event: React.FormEvent) => { event.preventDefault(); setSaving(true); setMessage(''); try { await api.saveProfile(profile); setMessage('Profile saved.'); } catch (e) { setMessage((e as Error).message); } finally { setSaving(false); } };
-  if (loading) return <main className="app"><p>Loading profile…</p></main>;
-  return <main className="app"><h1>OnCampus</h1><p>Tell us a little about yourself so we can personalize campus activities.</p><section className="card"><h2>Your profile</h2>{message && <p className="message">{message}</p>}<form onSubmit={submit}><label>Name<input required value={profile.name} onChange={(e) => update('name', e.target.value)} /></label><label>School<select value={profile.schoolId} onChange={(e) => update('schoolId', Number(e.target.value))}>{schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}</select></label><label>School year<select value={profile.schoolYear} onChange={(e) => update('schoolYear', e.target.value)}>{['first','second','third','fourth','fourth+','graduate'].map((year) => <option key={year}>{year}</option>)}</select></label><label>Major<input value={profile.major ?? ''} onChange={(e) => update('major', e.target.value || null)} /></label><label>Hobbies<input value={profile.hobbies.join(', ')} onChange={(e) => update('hobbies', e.target.value.split(',').map((v) => v.trim()).filter(Boolean))} placeholder="hiking, music, cooking" /></label><fieldset><legend>Interested in</legend><div className="choices">{types.map((type) => <label key={type}><input type="checkbox" checked={profile.interestedTypes.includes(type)} onChange={(e) => update('interestedTypes', e.target.checked ? [...profile.interestedTypes, type] : profile.interestedTypes.filter((v) => v !== type))} />{type}</label>)}</div></fieldset><button disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button></form></section></main>;
+  return usingSampleData ? <SampleApp /> : <LiveApp />;
 }

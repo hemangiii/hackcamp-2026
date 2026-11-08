@@ -4,6 +4,36 @@
 
 See [backend/server/API.md](backend/server/API.md) for endpoint addresses, request and response formats, authentication requirements, and error codes.
 
+## Frontend login
+
+The frontend uses Auth0 for login. In `frontend/client`, create a `.env` file:
+
+```env
+VITE_AUTH0_DOMAIN=your-tenant.us.auth0.com
+VITE_AUTH0_CLIENT_ID=your_auth0_client_id
+VITE_AUTH0_AUDIENCE=https://your-api-identifier
+VITE_API_URL=http://localhost:3000
+```
+
+Configure the Auth0 application callback URLs for local development:
+
+```text
+Allowed Callback URLs: http://localhost:5173
+Allowed Logout URLs: http://localhost:5173
+Allowed Web Origins: http://localhost:5173
+```
+
+The `VITE_AUTH0_AUDIENCE` value must match the backend `AUTH0_AUDIENCE`. The backend also needs `AUTH0_ISSUER_BASE_URL` and `AUTH0_AUDIENCE` in `backend/server/.env`.
+
+Start the backend and frontend in separate terminals:
+
+```sh
+cd backend/server && npm run dev
+cd frontend/client && npm run dev
+```
+
+If the frontend Auth0 variables are missing, the existing local/sample UI remains available. Never put an Auth0 client secret or a Resend API key in frontend environment variables.
+
 ## Email notifications
 
 The backend uses Resend for production notification emails. From the repository root, create a local environment file:
