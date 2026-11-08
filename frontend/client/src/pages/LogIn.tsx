@@ -11,11 +11,11 @@ const allowedDomain = (email: string) =>
   SCHOOL_OPTIONS.some((s) => email.trim().toLowerCase().endsWith(`@${s.domain}`));
 
 /**
- * Log in with a school email. Auth0 will take over from Continue once it's
- * wired into the frontend (no passwords are handled here); for now Continue
- * goes straight to Discover.
+ * Log in with a school email. Continue hands over to Auth0's login page
+ * (no passwords are handled by this app). In sample mode it goes straight
+ * to Discover.
  */
-export function LogIn({ onContinue, onSignUp, onBack }: { onContinue: () => void; onSignUp: () => void; onBack: () => void }) {
+export function LogIn({ onContinue, onSignUp, onBack }: { onContinue: (email: string) => void; onSignUp: () => void; onBack: () => void }) {
   const [email, setEmail] = useState('');
   const [touched, setTouched] = useState(false);
   const error = allowedDomain(email) ? null : 'Use your UBC, SFU or UVic school email.';
@@ -23,7 +23,7 @@ export function LogIn({ onContinue, onSignUp, onBack }: { onContinue: () => void
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setTouched(true);
-    if (!error) onContinue();
+    if (!error) onContinue(email.trim().toLowerCase());
   };
 
   return (

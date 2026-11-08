@@ -22,6 +22,15 @@ let profile: Profile | null = {
   hobbies: ['outdoors'], interestedTypes: ['food', 'sports'],
 };
 
+// "me" hosts one activity with two requests, and has asked to join two others.
+activities.push({ id: 'a6', creatorId: 'me', schoolId: 1, name: 'Board games at the Nest', description: 'Catan and snacks.', type: 'other', location: 'The Nest, room 2', startTime: at(1, 18), endTime: at(1, 21), link: null });
+const requests: JoinRequest[] = [
+  { id: 'r1', activityId: 'a6', userId: 'Leo (2nd year, CS)', status: 'pending', createdAt: at(0, 9) },
+  { id: 'r2', activityId: 'a6', userId: 'Priya (1st year, Sauder)', status: 'pending', createdAt: at(0, 10) },
+  { id: 'r3', activityId: 'a3', userId: 'me', status: 'accepted', createdAt: at(0, 8) },
+  { id: 'r4', activityId: 'a5', userId: 'me', status: 'pending', createdAt: at(0, 11) },
+];
+
 const delay = <T,>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), 250));
 
 export const sampleApi: Api = {
@@ -40,6 +49,26 @@ export const sampleApi: Api = {
     activities.push(created);
     return delay(created);
   },
-  requestToJoin: (activityId) =>
-    delay<JoinRequest>({ id: crypto.randomUUID(), activityId, userId: 'me', status: 'pending', createdAt: new Date().toISOString() }),
+  getActivity: (id) => {
+    const found = activities.find((a) => a.id === id);
+    return found ? delay(found) : Promise.reject(new Error('Activity not found'));
+  },
+  requestToJoin: (activityId) => {
+    const r: JoinRequest = { id: crypto.randomUUID(), activityId, userId: 'me', status: 'pending', createdAt: new Date().toISOString() };
+    requests.push(r);
+    return delay(r);
+  },
+  listMyRequests: () => delay(requests.filter((r) => r.userId === 'me')),
+  cancelRequest: (id) => {
+    const i = requests.findIndex((r) => r.id === id && r.status === 'pending');
+    if (i >= 0) requests.splice(i, 1);
+    return delay(undefined);
+  },
+  listRequestsFor: (activityId) => delay(requests.filter((r) => r.activityId === activityId)),
+  reviewRequest: (id, status) => {
+    const r = requests.find((x) => x.id === id);
+    if (!r) return Promise.reject(new Error('Join request not found'));
+    r.status = status;
+    return delay({ ...r });
+  },
 };
